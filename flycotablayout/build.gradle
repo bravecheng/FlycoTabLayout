@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 
-// 这个version是区分library版本的，因此当我们需要更新library时记得修改这个version
-version = "2.1.2"
 android {
     compileSdkVersion 28
 
@@ -9,7 +7,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 28
         versionCode 212
-        versionName version
+        versionName "2.1.2-androidx"
     }
     buildTypes {
         release {
@@ -20,6 +18,50 @@ android {
 }
 
 dependencies {
-    implementation 'com.android.support:support-v4:28.0.0'
+    api 'androidx.legacy:legacy-support-v4:1.0.0'
+}
+
+apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId 'com.flyco.tablayout'
+            version = android.defaultConfig.versionName
+            artifactId 'FlycoTabLayout_Lib'
+            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+            //把API依赖也放入POM
+            pom.withXml {
+                def dependencies = asNode().appendNode('dependencies')
+                configurations.api.allDependencies.each {
+                    // 如果有compile fileTree()，group会为空，需要去除
+                    if (it.group != null) {
+                        def dependency = dependencies.appendNode('dependency')
+                        dependency.appendNode('groupId', it.group)
+                        dependency.appendNode('artifactId', it.name)
+                        dependency.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
+}
+
+artifactory {
+    contextUrl = repo_url
+    publish {
+        repository {
+            repoKey = repo_key
+            username = repo_username
+            password = repo_password
+        }
+        defaults {
+            publications('aar')
+            publishArtifacts = true
+            properties = ['qa.level': 'basic', 'dev.team': 'core']
+            publishPom = true
+        }
+    }
 }
 

@@ -7,12 +7,18 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:3.1.1"
     }
 }
 
 allprojects {
     repositories {
         maven { url "http://app.sungrow.cn:8081/maven/" }
+    }
+
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addStringOption('encoding', 'UTF-8')
     }
 }
 
